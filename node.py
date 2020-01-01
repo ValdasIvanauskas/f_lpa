@@ -20,7 +20,7 @@ class Node:
     """ 
     
      
-    def __init__(self, idd, c, h):
+    def __init__(self, idd, h, c):
         """
         =======================================================================
          Description: Init Node with Idd.
@@ -28,13 +28,13 @@ class Node:
          Arguments:
         -----------------------------------------------------------------------
             1. idd : int (Node's Id).
-            2. c : Edges (Edges between the Nodes and their Costs).
-            3. h : float (Heuristic toward Goal Node).
+            2. h : float (Heuristic toward Goal Node).
+            3. c : Edges (Edges between the Nodes and their Costs).
         =======================================================================
         """
         self.idd = idd
-        self.c = c
         self.h = h
+        self.c = c
     
 
     def generate(self, father):
@@ -80,6 +80,21 @@ class Node:
         =======================================================================
         """
         return self.g + self.h
+
+    
+    def rhs(self):
+        """
+        =======================================================================
+         Description: Return RHS-Value of the Node.
+        =======================================================================
+         Return: float (RHS-Value of the Node).
+        =======================================================================
+        """
+        ans = float('Infinity')
+        for neighbor in self.c.get_neighbors(self.idd):
+            cost = self.c.get_cost(self.idd, neighbor)
+            ans = min(ans, cost)
+        return ans
     
     
     def __eq__(self, other):
@@ -174,7 +189,7 @@ class Node:
 def tester():
     
     import sys
-    sys.path.append('c:\\temp\\today\\f_utils')
+    sys.path.append('c:\\python modules\\f_utils')
     
     import u_tester
     from c_edge import Edge
@@ -207,34 +222,55 @@ def tester():
         edges = [edge_1, edge_2, edge_3]
         c = Edges(edges)
         
-        father_1 = Node(1)
-        father_1.generate(father=None, h=100, neighbor_cost={4:10})      
+        node_1 = Node(idd=1, h=None, c=c)
+        node_1.generate(father=None)      
         
-        father_2 = Node(2)
-        father_2.generate(father=None, h=200, neighbor_cost={4:20})
+        node_2 = Node(idd=2, h=None, c=c)
+        node_2.generate(father=None)
         
-        father_3 = Node(3)
-        father_3.generate(father=None, h=200, neighbor_cost={4:5})
+        node_3 = Node(idd=3, h=None, c=c)
+        node_3.generate(father=None)
         
-        node = Node(4)
-        node.generate(father=father_1, h=100, neighbor_cost={1:10,2:20,3:5})
+        node_4 = Node(idd=4, h=None, c=c)
+        node_4.generate(father=node_1)
         
-        # Father_2 is less attractive from Father_1
-        node.update(father_2)
-        p0 = node.father == father_1
-        p1 = node.g == 10
+        # Node_2 is less attractive father from Node_1
+        node_4.update(node_2)
+        p0 = node_4.father == node_1
+        p1 = node_4.g == 10
         
-        # Father_3 is more attractive from Father_1
-        node.update(father_3)
-        p2 = node.father == father_3
-        p3 = node.g == 5
+        # Node_3 is more attractive father from Node_1
+        node_4.update(node_3)
+        p2 = node_4.father == node_3
+        p3 = node_4.g == 5
         
         u_tester.run([p0,p1,p2,p3])
+        
+    
+    def tester_rhs():
+        
+        edge = Edge(idd_1=1, idd_2=2, cost=10)
+        c = Edges([edge])
+        
+        node_1 = Node(idd=1, h=None, c=c)
+        node_1.generate(father=None)
+        
+        node_2 = Node(idd=2, h=None, c=c)
+        node_2.generate(father=node_1)
+        
+        c._edges[frozenset({node_1.idd,node_2.idd})] = 5
+        
+        # G holds old value and RHS updated with a new value
+        p0 = node_2.g == 10
+        p1 = node_2.rhs() == 5
+        
+        u_tester.run([p0,p1])
            
 
     u_tester.print_start(__file__)
     tester_generate()
-    #tester_update()
+    tester_update()
+    tester_rhs()
     u_tester.print_finish(__file__)
     
 tester()
