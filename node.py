@@ -1,3 +1,5 @@
+from c_edges import Edges
+
 class Node:
     """
     ===========================================================================
@@ -20,7 +22,7 @@ class Node:
     """ 
     
      
-    def __init__(self, idd, h, c):
+    def __init__(self, idd, h=float('Infinity'), edges=Edges()):
         """
         =======================================================================
          Description: Init Node with Idd.
@@ -29,15 +31,15 @@ class Node:
         -----------------------------------------------------------------------
             1. idd : int (Node's Id).
             2. h : float (Heuristic toward Goal Node).
-            3. c : Edges (Edges between the Nodes and their Costs).
+            3. edges : Edges (Edges between the Nodes).
         =======================================================================
         """
         self.idd = idd
         self.h = h
-        self.c = c
+        self._edges = edges
     
 
-    def generate(self, father):
+    def generate(self, father=None):
         """
         =======================================================================
          Description: Generate a Node (Set Father and G-Value).
@@ -49,7 +51,7 @@ class Node:
         """
         self.father = father
         if father:
-            self.g = father.g + self.c.get_cost(self.idd, father.idd)
+            self.g = father.g + self._cost(father.idd)
         else:
             self.g = 0
             
@@ -65,22 +67,11 @@ class Node:
             1. father : Node (Candidate Father).
         =======================================================================
         """
-        cost_father = self.c.get_cost(self.idd, father.idd)
-        if (self.g > father.g + cost_father):
+        g_new = father.g + self._cost(father.idd)
+        if (self.g > g_new):
             self.father = father
-            self.g = father.g + cost_father
+            self.g = g_new
     
-    
-    def f(self):
-        """
-        =======================================================================
-         Description: Return F value of the Node (g + h).
-        =======================================================================
-         Return: float
-        =======================================================================
-        """
-        return self.g + self.h
-
     
     def rhs(self):
         """
@@ -91,10 +82,47 @@ class Node:
         =======================================================================
         """
         ans = float('Infinity')
-        for neighbor in self.c.get_neighbors(self.idd):
-            cost = self.c.get_cost(self.idd, neighbor)
+        for idd_neighbor in self._neighbors():
+            cost = self._cost(idd_neighbor)
             ans = min(ans, cost)
         return ans
+    
+    
+    def f(self):
+        """
+        =======================================================================
+         Description: Return F value of the Node (g + h).
+        =======================================================================
+         Return: float
+        =======================================================================
+        """
+        return min(self.g,self.rhs()) + self.h
+    
+    
+    def _cost(self, idd_other):
+        """
+        =======================================================================
+         Description: Return the Cost from Self to Other Node.
+        =======================================================================
+         Arguments:
+        -----------------------------------------------------------------------
+            1. other : Node
+        =======================================================================
+         Return: float (The Cost from Self to Other Node).
+        =======================================================================
+        """
+        return self._edges.get_cost(self.idd, idd_other)
+    
+    
+    def _neighbors(self):
+        """
+        =======================================================================
+         Description: Return List of Neighbors Id of the Self.
+        =======================================================================
+         Return: list of int (List of Neighbors Id of the Self).
+        =======================================================================
+        """
+        return self._edges.get_neighbors(self.idd)
     
     
     def __eq__(self, other):
@@ -143,7 +171,7 @@ class Node:
         if (self.f() < other.f()):
             return True
         if (self.f() == other.f()):
-            if (self.g >= other.g):
+            if (min(self.g,self.rhs()) >= min(other.g,other.rhs())):
                 return True
         return False
     
@@ -192,13 +220,12 @@ def tester():
     sys.path.append('c:\\python modules\\f_utils')
     
     import u_tester
-    from c_edge import Edge
     from c_edges import Edges
     
     def tester_generate():
         
-        edge = Edge(idd_1=1, idd_2=2, cost=10)
-        c = Edges([edge])
+        edges = Edges()
+        edges.add(idd_1=1, idd_2=2, cost=10)
         
         node_1 = Node(idd=1, h=None, c=c)
         node_1.generate(father=None)
@@ -258,11 +285,92 @@ def tester():
         node_2 = Node(idd=2, h=None, c=c)
         node_2.generate(father=node_1)
         
-        c._edges[frozenset({node_1.idd,node_2.idd})] = 5
+        couple = frozenset({node_1.idd,node_2.idd})
+        c._edges[couple] = 5
         
         # G holds old value and RHS updated with a new value
         p0 = node_2.g == 10
         p1 = node_2.rhs() == 5
+        
+        u_tester.run([p0,p1])
+        
+        
+    def tester_f():
+        
+        edge = Edge(idd_1=1, idd_2=2, cost=10)
+        c = Edges([edge])
+        
+        node_1 = Node(idd=1, h=None, c=c)
+        node_1.generate(father=None)
+        
+        node_2 = Node(idd=2, h=100, c=c)
+        node_2.generate(father=node_1)
+        
+        couple = frozenset({node_1.idd,node_2.idd})
+        c._edges[couple] = 5
+        
+        # G holds old value and RHS updated with a new value
+        p0 = node_2.f() == 105
+        
+        u_tester.run([p0])
+        
+        
+    def tester_eq():
+        
+        node_1 = Node(idd=1)
+        node_2 = Node(idd=2)
+        node_3 = node_1
+        
+        p0 = node_1 == node_3
+        p1 = not (node_1 == node_2)
+        
+        u_tester.run([p0,p1])
+        
+        
+    def tester_ne():
+        
+        node_1 = Node(idd=1)
+        node_2 = Node(idd=2)
+        node_3 = node_1
+        
+        p0 = not node_1 != node_3
+        p1 = node_1 != node_2
+        
+        u_tester.run([p0,p1])
+        
+        
+    def tester_lt():
+        
+        node_1 = Node(idd=1, h=100)
+        node_1.generate(father=None)
+        
+        node_2 = Node(idd=2, h=200)
+        node_2.generate(father=None)
+        
+        # node_1.f < node_2.f
+        p0 = node_1 < node_2
+        
+        edge_1 = Edge(idd_1=1, idd_2=2, cost=90)
+        edge_2 = Edge(idd_1=3, idd_2=4, cost=10)
+        edges = [edge_1, edge_2]
+        c = Edges(edges)
+        
+        father_1 = Node(idd=1)
+        father_1.generate(father=None)
+        
+        node_1 = Node(idd=2, h=10, c=c)
+        node_1.generate(father=father_1)
+        
+        father_2 = Node(idd=3)
+        father_2.generate(father=None)
+        
+        node_2 = Node(idd=4, h=90, c=c)
+        node_2.generate(father=father_2)
+        
+        # node_1.f == node_2.f and node_1.g > node_2.g
+        p1 = node_1 < node_2        
+        
+        father_3 = Node(idd=5)
         
         u_tester.run([p0,p1])
            
@@ -271,6 +379,10 @@ def tester():
     tester_generate()
     tester_update()
     tester_rhs()
+    tester_f()
+    tester_eq()
+    tester_ne()
+    tester_lt()
     u_tester.print_finish(__file__)
     
 tester()
