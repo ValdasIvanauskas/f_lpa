@@ -120,7 +120,7 @@ class Opened:
     def __str__(self):
         if self.is_empty(): return 'Empty Opened'
         
-        temp = '{}\n'.format(self._best)
+        temp = '{}\n'.format(self.best)
         for node in self._opened:
             if (node != self.best):
                 temp += '{}\n'.format(node)

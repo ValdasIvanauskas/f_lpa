@@ -12,21 +12,25 @@ class LPA:
         
     
     def run(self):
+        self.graph.print()
+        print('Opened={0}'.format(self.opened))
+        self.compute_shortest_path()
+        self.graph.add_edge(self.graph.nodes[1],self.graph.nodes[2],1)
         self.compute_shortest_path()
     
-    
     def compute_shortest_path(self):
-        while (self.opened.best < self.goal or self.graph.rhs(self.goal) != self.goal.g):
+        while (not self.opened.is_empty()) and (self.opened.best < self.goal or self.graph.rhs(self.goal) != self.goal.g):
             best = self.opened.pop()
             if (best.g > self.graph.rhs(best)):
                 best.g = self.graph.rhs(best)
             else:
                 best.g = float('Infinity')
                 self.update_node(best)
-            for neighbor in self.graph.neighbors[best]:
-                self.update_node(neighbor)
-            print(best)
-        print('finish')
+            if self.graph.succ.get(best):
+                for neighbor in self.graph.succ[best]:
+                    self.update_node(neighbor)
+            self.graph.print()
+            print('Opened={0}'.format(self.opened))
         
         
     def update_node(self, node):
@@ -55,8 +59,8 @@ def tester():
     
     def tester_run():
         node_start = Node(1,2)
-        node_a = Node(2,10)
-        node_b = Node(3,7)
+        node_a = Node(2,5)
+        node_b = Node(3,1)
         node_goal = Node(4,0)
         nodes = [node_start, node_a, node_b, node_goal]
         

@@ -7,10 +7,19 @@ class Graph:
         =======================================================================
         """
         self.nodes = dict()
-        self._cost = dict()
-        self.neighbors = dict()
+        self.cost = dict()
+        self.pred = dict()
+        self.succ = dict()
         self.start = start
     
+    
+    def print(self):
+        for node in self.nodes.values():
+            idd = node.idd
+            g = node.g
+            rhs = self.rhs(node)
+            f = node.f()
+            print('idd={0}, g={1}, rhs={2}, f={3}'.format(idd,g,rhs,f))
     
     def add_nodes(self, nodes):
         """
@@ -39,37 +48,19 @@ class Graph:
             3. cost : float (Cost of the Edge).
         =======================================================================
         """
-        # Add to _cost dictionary
-        couple = frozenset({node_1, node_2})
-        self._cost[couple] = cost
+        # Add to cost dictionary
+        self.cost[(node_1,node_2)] = cost
         
         # Add to _neighbors dictionary
-        if self.neighbors.get(node_1):
-            self.neighbors[node_1].add(node_2)
+        if self.succ.get(node_1):
+            self.succ[node_1].add(node_2)
         else:
-            self.neighbors[node_1] = {node_2}
+            self.succ[node_1] = {node_2}
             
-        if self.neighbors.get(node_2):
-            self.neighbors[node_2].add(node_1)
+        if self.pred.get(node_2):
+            self.pred[node_2].add(node_1)
         else:
-            self.neighbors[node_2] = {node_1}
-        
-    
-    def cost(self, node_1, node_2):
-        """
-        =======================================================================
-         Description: Return the real Cost from Node_1 to Node_2.
-        =======================================================================
-         Arguments:
-        -----------------------------------------------------------------------
-            1. node_1 : Node.
-            2. node_2 : Node.
-        =======================================================================
-         Return: float (The real Cost from Node_1 to Node_2).
-        =======================================================================
-        """
-        couple = frozenset({node_1, node_2})
-        return self._cost[couple]
+            self.pred[node_2] = {node_1}
     
     
     def rhs(self, node):
@@ -88,8 +79,8 @@ class Graph:
             if node == self.start:
                 return 0
         ans = float('Infinity')
-        for neighbor in self.neighbors[node]:
-            cost = neighbor.g + self.cost(node, neighbor)
+        for neighbor in self.pred[node]:
+            cost = neighbor.g + self.cost[(neighbor, node)]
             ans = min(ans, cost)
         return ans
    
