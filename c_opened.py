@@ -49,7 +49,7 @@ class Opened:
     #=================================================================
     def pop(self):        
         temp = self.best
-        
+          
         # Remove the Best Node from the Opened set
         #   and set the Best Node to be None
         if self.best is not None:
@@ -74,8 +74,9 @@ class Opened:
         =======================================================================
         """
         self._opened.remove(node)
-        for node in self._opened:
-            self._update_best(node)
+        self.best = None
+        for node_cur in self._opened:
+            self._update_best(node_cur)
     
     
     def contains(self,node):

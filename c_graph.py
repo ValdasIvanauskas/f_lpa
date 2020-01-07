@@ -20,6 +20,8 @@ class Graph:
             rhs = self.rhs(node)
             f = node.f()
             print('idd={0}, g={1}, rhs={2}, f={3}'.format(idd,g,rhs,f))
+        print()
+    
     
     def add_nodes(self, nodes):
         """
@@ -33,7 +35,7 @@ class Graph:
         """
         for node in nodes:
             self.nodes[node.idd] = node
-            node.set_graph(self)
+            #node.set_graph(self)
     
     
     def add_edge(self, node_1, node_2, cost=float('Infinity')):

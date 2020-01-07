@@ -22,7 +22,7 @@ class Node:
     """ 
     
      
-    def __init__(self, idd, h=float('Infinity')):
+    def __init__(self, idd, h=float('Infinity'), graph=None):
         """
         =======================================================================
          Description: Init Node with Idd.
@@ -37,11 +37,8 @@ class Node:
         self.idd = idd
         self.h = h
         self.g = float('Infinity')
-    
-
-    def set_graph(self, graph):
         self.graph = graph
-        
+
         
     def generate(self, father=None):
         """
